@@ -1,0 +1,19 @@
+* {
+  outline: 1px dotted red;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  width: 40em;
+  margin: 0 auto;
+}
+
+pre {
+  margin: 0;
+  padding: 0;
+}

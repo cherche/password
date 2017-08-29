@@ -4,7 +4,7 @@ const LATIN_ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 const chain = (thing, fns) => {
   let copy = thing
 
-  if (Array.isArray(thing)) copy.slice()
+  if (Array.isArray(thing)) copy = thing.slice()
 
   for (let i = 0; i < fns.length; i++) {
     copy = fns[i](copy)
@@ -15,6 +15,7 @@ const chain = (thing, fns) => {
 */
 
 const intoArray = str => str.split('')
+// Cannot use toString() because it is a property of window
 const intoString = arr => arr.join('')
 
 const getRandomEl = arr => arr[Math.floor(Math.random() * arr.length)]
@@ -65,21 +66,24 @@ const generate = (custom = {}) => {
   config.sets = Object.assign({}, sets, custom.sets || {})
 
   let fullSet = []
-  const password = []
-
   // Build collection of all sets
   for (const key of Object.keys(config.sets)) {
     if (config[key]) {
-      /* Guarantee that the password contains
+      // Guarantee that the password contains
       // at least one character from each set
-      password.push(getRandomEl(config.sets[key]))
-      */
+      // password.push(getRandomEl(config.sets[key]))
       fullSet = fullSet.concat(config.sets[key])
     }
   }
 
-  // Select random character from total set each time and add
+  const password = []
+  // Select random character from total set each time
+  // Add until the password is the desired length
   while (password.length < config.length) password.push(getRandomEl(fullSet))
+
+  while (password[0] === ' ' || password[password.length - 1] === ' ') {
+    password = shuffle(password)
+  }
 
   // Human-readable and usable format
   return intoString(password)
