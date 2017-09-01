@@ -13,6 +13,17 @@ body {
   margin: 0 auto;
 }
 
+.config-container * {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+textarea {
+  height: 10rem;
+}
+
 pre {
   margin: 0;
   padding: 0;

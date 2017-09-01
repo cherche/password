@@ -14,11 +14,14 @@ const chain = (thing, fns) => {
 }
 */
 
+const isArray = Array.isArray
+const isObject = thing => typeof thing === 'object' && !isArray(thing)
+
 const intoArray = str => str.split('')
-// Cannot use toString() because it is a property of window
+// Cannot use toString() because it is already a property of window
 const intoString = arr => arr.join('')
 
-const getRandomEl = arr => arr[Math.floor(Math.random() * arr.length)]
+const getRandomEl = thing => thing[Math.floor(Math.random() * thing.length)]
 const shuffle = (arr) => {
   // Create copy to avoid mutation
   const copy = arr.slice()
@@ -36,55 +39,69 @@ const shuffle = (arr) => {
 }
 const trim = str => str.replace(/^\s+|\s+$/g, '')
 
-const sets = {
-  uppercase: LATIN_ALPHABET.toUpperCase(),
-  lowercase: LATIN_ALPHABET,
-  numbers: '0123456789',
-  symbols: '?!@#$%^&*()-_=+[]{}/\\|:;\'",.<>',
-  spaces: ' '
-}
-
-// Transform all strings into arrays
-for (const key of Object.keys(sets)) {
-  sets[key] = intoArray(sets[key])
-}
-
 const def = {
-  sets,
   length: 16,
-  uppercase: true,
-  lowercase: true,
-  numbers: true,
-  symbols: true,
-  spaces: true
+  uppercase: {
+    enabled: true,
+    chars: LATIN_ALPHABET.toUpperCase()
+  },
+  lowercase: {
+    enabled: true,
+    chars: LATIN_ALPHABET
+  },
+  numbers: {
+    enabled: true,
+    chars: '0123456789'
+  },
+  symbols: {
+    enabled: true,
+    chars: '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
+  },
+  spaces: {
+    enabled: true,
+    chars: ' '
+  }
 }
 
-const generate = (custom = {}) => {
+const generate = (overwrite = {}) => {
   // Use Object.assign() to overwrite any default values
   // {} is passed in to avoid mutation
-  const config = Object.assign({}, def, custom)
-  config.sets = Object.assign({}, sets, custom.sets || {})
+  const config = Object.assign({}, def, overwrite)
+  // Merge all child objects of def and custom
+  Object.keys(overwrite)
+    .filter(isObject)
+    .forEach((key) => {
+      config[key] = Object.assign({}, def[key], overwrite[key])
+      console.log(key, config[key])
+    })
 
-  let fullSet = []
-  // Build collection of all sets
-  for (const key of Object.keys(config.sets)) {
-    if (config[key]) {
-      // Guarantee that the password contains
-      // at least one character from each set
-      // password.push(getRandomEl(config.sets[key]))
-      fullSet = fullSet.concat(config.sets[key])
-    }
-  }
+  // Build collection of all enabled characters
+  const fullChars = Object.keys(config)
+    .filter((key) => {
+      const set = config[key]
+      // Idiot-proofing (though I'm guilty of it myself ...)
+      // If it wasn't specified whether or not the set
+      // was enabled, it will be considered enabled
+      if (set.enabled === undefined) set.enabled = true
 
-  const password = []
+      return set.enabled
+    })
+    .reduce((sum, key) => {
+      const set = config[key]
+
+      return sum + set.chars
+    }, '')
+
+  let password = []
   // Select random character from total set each time
   // Add until the password is the desired length
-  while (password.length < config.length) password.push(getRandomEl(fullSet))
+  while (password.length < config.length) password.push(getRandomEl(fullChars))
 
+  // Ensure that the password neither begins nor ends with a space
   while (password[0] === ' ' || password[password.length - 1] === ' ') {
     password = shuffle(password)
   }
 
-  // Human-readable and usable format
+  // Return in a human-readable and usable format
   return intoString(password)
 }
